@@ -1,0 +1,137 @@
+#Datascience Capstone Assignment #1
+##A.Ritz 6/2016
+
+For this assignment / exercise, we will be performing a basic analysis on our three source files (english)
+to get an idea of their respective sizes and content.
+
+```{r}
+
+rm(list=ls())
+
+library(quanteda)
+library(ggplot2)
+library(dplyr)
+
+# Let's grab our files to start.
+dir<-'./DataFiles/en_US'
+files<-list.files(dir, full.names = TRUE)
+
+# How big are they (mb)?
+fSizes<-sapply(files, function(x) paste0(file.size(x) / 1e6, 'Mb'))
+print(fSizes)
+
+```
+
+In total, the file sizes are in excess of 500Mb, which is a rather large amount of data.  We can expect that there will similarly be a large number of lines + individual words.  We will collect that information now.
+
+```{r cache=TRUE, warning=FALSE}
+
+# We will define + apply a function that will be used to extract all of the lines form our files.
+# We will use these lines for subsequent processing.
+readAllLines<-function(path)
+{
+  c<-file(path, open="rt")
+  lines<-readLines(c)
+  close(c)
+  
+  lines
+}
+
+# This will take a while...
+lineGroups <- sapply(files, readAllLines)
+
+# Now we can get an idea of how many lines per file.
+lineCounts<-sapply(lineGroups, length)
+print(lineCounts)
+
+most<-max(lineCounts)
+total<-sum(lineCounts)
+
+```
+
+We can see that each of the files contain a large number of lines, the smallest of which is almost 900,000 lines, and the largest (twitter) has a count of **`r most`**.  In total, we have **`r total`** lines.
+  
+Now that we have all of our lines in place, we will tokenize them so that we can count the words on each of the lines, and later we will use these tokenized versions to compute n-grams so that we can get some idea of their distribution in our files.
+
+```{r cache=TRUE}
+
+# This will take all lines, squash them to a single vector, and tokenize them.
+getTokens<-function(lines)
+{
+  doc<-paste(lines, collapse = " ")
+  
+  # Note the removal of punctuation, numbers, etc. from the list of tokens.
+  t<-tokenize(doc, removeNumbers=TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
+  t
+}
+
+# Before we begin counting ngrams, we will want to count the total numer of words in all docs.
+# Because of the size, this will also take a while.  Each of the line sets are collapsed into
+# a single 'document' so that we may more effectively tokenize it.
+countWords<-function(lines)
+{
+  t<-getTokens(lines)
+
+  # a tokenized document is simply a list of all tokens (words).  So if we take its length,
+  # we get the word count.
+  res<-length(t)
+  res
+}
+
+wordCounts<-sapply(lineGroups, countWords)
+wordSum<-sum(wordCounts)
+print(wordCounts)
+
+```
+
+As we can see, there are a huge number of words in all of the documents.
+-- Make note of which doc has the most.
+The combined count is almost 100 million, weighing in at **`r wordSum`**
+
+```{r cache=TRUE}
+# Because of the library that we are using (quanteda) we will combine all of the lines into a
+# single character array (this will make tabulation easier later).
+# of course, we don't want to include all of the data because of the sheer size of it.  Instead,
+# we will take a sample, and infer some numbers from it.
+
+set.seed(1234)
+sampleSize<-1000
+sampleSet<- sapply(lineGroups, function(x) sample(x, sampleSize))
+
+COLS<-2
+
+
+# collapse our matrix into a single document composed of our sampled data.
+# once we have the docs together, we can tokenize!
+docs<-apply(sampleSet, MARGIN=COLS, function(x) paste(x, collapse = " "))
+docs<-toLower(paste(docs, collapse=" "))
+
+# We still want to remove special chars, etc.
+docTokens<-tokenize(docs, removeNumbers=TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
+
+tokenDF<-data.frame(table(docTokens))
+names(tokenDF) <-c('Token', 'Count')
+
+# We will sort, and only display the top-n items.
+topN<-25
+byCount<-arrange(tokenDF, desc(Count))[1:topN,]
+
+
+```
+
+
+```{r fig.cap="Tokens by Frequency"}
+
+
+g <- ggplot(byCount, aes(x=reorder(Token, Count), y=Count)) +
+    geom_bar(stat = "identity") + 
+    coord_flip() +
+    theme(legend.title=element_blank()) +
+    xlab("Token") + 
+    ylab("Count") +
+    labs(title = "Top Tokens by Count")
+print(g)
+
+
+
+```
