@@ -1,10 +1,12 @@
 #Datascience Capstone Assignment #1
-##A.Ritz 6/2016
+###A.Ritz 6/2016
 
+
+###Introduction
 For this assignment / exercise, we will be performing a basic analysis on our three source files (english)
 to get an idea of their respective sizes and content.
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 
 rm(list=ls())
 
@@ -21,6 +23,8 @@ fSizes<-sapply(files, function(x) paste0(file.size(x) / 1e6, 'Mb'))
 print(fSizes)
 
 ```
+
+###Analysis
 
 In total, the file sizes are in excess of 500Mb, which is a rather large amount of data.  We can expect that there will similarly be a large number of lines + individual words.  We will collect that information now.
 
@@ -110,28 +114,83 @@ docs<-toLower(paste(docs, collapse=" "))
 docTokens<-tokenize(docs, removeNumbers=TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
 
 tokenDF<-data.frame(table(docTokens))
-names(tokenDF) <-c('Token', 'Count')
-
-# We will sort, and only display the top-n items.
-topN<-25
-byCount<-arrange(tokenDF, desc(Count))[1:topN,]
+names(tokenDF) <-c('Term', 'Count')
 
 
 ```
 
+```{r}
+# Common plotting function.
+# Takes care of sorting + topN selection.
+# Returns a ggplot object that must be printed.
+# Please note that we are using 'Term' instead of n-gram (unigram, bigram, trigram) for ease of coding
+# the labels will make the size of the ngrams obvious.
+TOP_N<-25
+plotnGrams<-function(df)
+{
+  byCount<-arrange(df, desc(Count))[1:TOP_N,]
 
-```{r fig.cap="Tokens by Frequency"}
-
-
-g <- ggplot(byCount, aes(x=reorder(Token, Count), y=Count)) +
+  g <- ggplot(byCount, aes(x=reorder(Term, Count), y=Count)) +
     geom_bar(stat = "identity") + 
     coord_flip() +
     theme(legend.title=element_blank()) +
-    xlab("Token") + 
+    xlab("Term") + 
     ylab("Count") +
-    labs(title = "Top Tokens by Count")
-print(g)
+    labs(title = "Top Terms by Count")
+  g
+}
+```
 
+```{r fig.cap="Tokens by Frequency"}
+
+# Now we plot and print!
+
+g1<-plotnGrams(tokenDF)
+print(g1)
+
+# Compute a quick stat to convey proportion of tokens.
+topSum<-sum((arrange(tokenDF, desc(Count))[1:TOP_N,])$Count)
+topPct<-(topSum/length(docTokens))*100
+
+```
+
+We can see here that most of the words from our sample are what one would expect.  Lots the smaller, more common words.  Technically these are known as "[stop words](https://en.wikipedia.org/wiki/Stop_words)".  During the tokenization process we could leave them out as they may not convey as much meaning as we would like, and because of their commonality (**`r topPct`%** for the first **`r TOP_N`** terms) they may make our predictions more difficult.  I have left them in or this analysis however.
+
+##Bigrams and Trigrams
+As a final step of our analysis, we are going to measure the bigrams and trigrams some our sample.  These correspond to n-grams of size two and three respectively.
+
+```{r, cache=TRUE}
+
+# We already have our sample tokens, so all we have to do is compute the grams, and get them in shape for
+# plotting.
+bigrams<-ngrams(docTokens, n=2, concatenator=" ")
+bgDF<-data.frame(table(bigrams))
+names(bgDF) <-c('Term', 'Count')
+g2<-plotnGrams(bgDF)
+
+trigrams<-ngrams(docTokens, n=3, concatenator=" ")
+tgDF<-data.frame(table(trigrams))
+names(tgDF) <-c('Term', 'Count')
+g3<-plotnGrams(tgDF)
 
 
 ```
+
+```{r fig.cap="Plot of frequent bigram Data"}
+
+print(g2)
+
+```
+
+```{r fig.cap="Plot of frequent Trigram Data"}
+
+print(g3)
+
+```
+
+
+###Sumary
+As one might expect, the relative frequency of the n-grams drops sharply as we add more tokens to the n-grams.
+This looks like it may be a useful feature as it could make it easier to predict the next word after a user has already input two or more.
+
+
