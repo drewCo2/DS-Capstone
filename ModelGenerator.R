@@ -6,7 +6,8 @@
 
 rm(list=ls())
 
-source("begin.r")
+source("begin.R")
+source("ModelFuncs.R")
 
 library(quanteda)
 library(dplyr)
@@ -19,37 +20,6 @@ COLS<-2
 dir<-'./DataFiles/en_US'
 files<-list.files(dir, full.names = TRUE)
 
-
-# We will define + apply a function that will be used to extract all of the lines form our files.
-# We will use these lines for subsequent processing.
-readAllLines<-function(path)
-{
-  c<-file(path, open="rt")
-  lines<-readLines(c)
-  close(c)
-  
-  lines
-}
-
-# squish all of the lines into a single (all lowercase) 'document'
-createDoc<-function(lines)
-{
-  doc<-sapply(lines, paste, collapse=" ", USE.NAMES=FALSE)
-  doc<-toLower(paste(doc, collapse=" "))
-  doc
-}
-
-# Create a data frame that contains the terms (ngram) and associated count.
-ngramDF<-function(tokens, n)
-{
-  ng<-ngrams(tokens, n, concatenator = " ")
-  t<-table(ng)
-  df<-data.frame(t)
-  names(df)<-c('Term', 'Count')
-  
-  df<-arrange(df, desc(Count), Term)
-  df
-}
 
 # We can read all of the lines in for processing.
 lineGroups <- sapply(files, readAllLines)
@@ -85,4 +55,14 @@ take<-s*takeTopPct
 #ngram_3 <- ngrams(allTokens, 3)
 
 
+
+TEST<-20
+l<-1:100
+sel<-selectByMass(l, TEST)
+l2<-l[sel]
+
+l2s<-sum(l2)
+m<-paste("test ok? ", sum(l2) <= TEST, " :", sum(l2))
+
+message(m)
 
