@@ -39,30 +39,36 @@ allTokens<-tokenize(paste(docSets, collapse=" "), removeNumbers=TRUE, removeHyph
 
 ngram_1 <- ngramDF(allTokens, 1)
 ngram_2 <- ngramDF(allTokens, 2)
+ngram_3 <- ngramDF(allTokens, 3)
+ngram_4 <- ngramDF(allTokens, 4)
 
 
 # We certainly don't want stats on everything that appears in our tables.  We should take a certain percentage of each,
 # depending on our needs.  The more we have, the more lookup space to traverse, but less chance of missing a word.
 
-# We will take 80% of the matches, from the top.
-takeTopPct <- .8;
+# We will take some percentage of the matches, from the top.
+# This should be small since the distribution of matches will fall off quickly.
+# We could also experiment with selectiong top-n, or by min. Count.
+takeTopPct <- .05;
 
-s<-sum(ngram_2$Count)
-take<-s*takeTopPct
+
+# NOTE: We actually only need a few of the top unigrams as they are fallback for a
+# no-match situation.
+MAX<-5000
+
+top_1<-selectTopN(ngram_1, MAX)
+top_2<-selectTopN(ngram_2, MAX)
+top_3<-selectTopN(ngram_3, MAX)
+top_4<-selectTopN(ngram_4, MAX)
+
+top_1mc<-selectMinCount(ngram_1, 2, MAX)
+top_2mc<-selectMinCount(ngram_2, 2, MAX)
+top_3mc<-selectMinCount(ngram_3, 2, MAX)
+top_4mc<-selectMinCount(ngram_4, 2, MAX)
 
 
+boxplot(ngram_1$Count, ngram_2$Count, ngram_3$Count)
+boxplot(top_1$Count, top_2$Count, top_3$Count)
 #ngram_2 <- ngrams(allTokens, 2)
 #ngram_3 <- ngrams(allTokens, 3)
-
-
-
-TEST<-20
-l<-1:100
-sel<-selectByMass(l, TEST)
-l2<-l[sel]
-
-l2s<-sum(l2)
-m<-paste("test ok? ", sum(l2) <= TEST, " :", sum(l2))
-
-message(m)
 

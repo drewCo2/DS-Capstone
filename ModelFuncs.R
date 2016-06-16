@@ -43,3 +43,34 @@ accIsLessThanMass<-function(vec, mass)
   res
 }
 
+# Just grab the top terms from the df, according to our count percents.
+selectTopPct<-function(df, pct)
+{
+  s<-sum(df$Count)
+  mass<-s*pct
+  
+  sel<-accIsLessThanMass(df$Count, mass)
+  res<-df[sel,]
+  res
+  
+}
+
+# Grab the top n-items from the df
+selectTopN<-function(df, n)
+{
+  res<-df[1:n, ]
+  res
+}
+
+# select the top-n items that have a count >= min.
+# limited by maxN
+selectMinCount<-function(df, min, maxN)
+{
+  sel<-df$Count >= min
+  res<-df[sel,]
+  if (nrow(res) > maxN)
+  {
+    res<-res[1:maxN,]
+  }
+  res
+}
