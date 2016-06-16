@@ -5,7 +5,11 @@
 # A lot of this content was taken from the exploration and assignment files.
 
 rm(list=ls())
+
 source("begin.r")
+
+library(quanteda)
+library(dplyr)
 
 # defs
 COLS<-2
@@ -27,27 +31,24 @@ readAllLines<-function(path)
   lines
 }
 
-# This will take all lines, squash them to a single vector, and tokenize them.
-# getTokens<-function(lines)
-# {
-#   doc<-paste(lines, collapse = " ")
-#   
-#   # Note the removal of punctuation, numbers, etc. from the list of tokens.
-#   t<-tokenize(doc, removeNumbers=TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
-#   t
-# }
-
 # squish all of the lines into a single (all lowercase) 'document'
 createDoc<-function(lines)
 {
-  doc<-sapply(lines, MARGIN=COLS, paste, collapse=" ")
+  doc<-sapply(lines, paste, collapse=" ", USE.NAMES=FALSE)
   doc<-toLower(paste(doc, collapse=" "))
   doc
-  # collapse our matrix into a single document composed of our sampled data.
-  # once we have the docs together, we can tokenize!
-#   docs<-apply(sampleSet, MARGIN=COLS, function(x) paste(x, collapse = " "))
-#   docs<-toLower(paste(docs, collapse=" "))
+}
+
+# Create a data frame that contains the terms (ngram) and associated count.
+ngramDF<-function(tokens, n)
+{
+  ng<-ngrams(tokens, n, concatenator = " ")
+  t<-table(ng)
+  df<-data.frame(t)
+  names(df)<-c('Term', 'Count')
   
+  df<-arrange(df, desc(Count), Term)
+  df
 }
 
 # We can read all of the lines in for processing.
@@ -60,7 +61,28 @@ set.seed(1234)
 sampleSize<-1000
 sampleSet<- sapply(lineGroups, function(x) sample(x, sampleSize))
 
-# squish all of the lines into some docs that we can tokenize with.
-docSet<-apply(sampleSet, MARGIN = COLS, createDoc)
+# We will merge all docs into a single one, which we will then tokenize.  From there we will
+# generate our n-grams.
+docSets<-apply(sampleSet, MARGIN=COLS, createDoc)
+
+allTokens<-tokenize(paste(docSets, collapse=" "), removeNumbers=TRUE, removeHyphens = TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
+
+ngram_1 <- ngramDF(allTokens, 1)
+ngram_2 <- ngramDF(allTokens, 2)
+
+
+# We certainly don't want stats on everything that appears in our tables.  We should take a certain percentage of each,
+# depending on our needs.  The more we have, the more lookup space to traverse, but less chance of missing a word.
+
+# We will take 80% of the matches, from the top.
+takeTopPct <- .8;
+
+s<-sum(ngram_2$Count)
+take<-s*takeTopPct
+
+
+#ngram_2 <- ngrams(allTokens, 2)
+#ngram_3 <- ngrams(allTokens, 3)
+
 
 
