@@ -27,6 +27,7 @@ ngramDF<-function(tokens, n)
   names(df)<-c('Term', 'Count')
   
   df<-arrange(df, desc(Count), Term)
+  df<-mutate(df, Term=as.character(Term))
   df
 }
 
