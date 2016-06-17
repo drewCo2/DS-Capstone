@@ -43,77 +43,48 @@ ngram_3 <- ngramDF(allTokens, 3)
 ngram_4 <- ngramDF(allTokens, 4)
 
 
-# Given a set of ngrams, with terms and counts, this will decompose it into a data frame with probabilites
-# for the next word given n-1 tokens.
-makeNgDf<-function(ngrams, gramSize)
-{
-  # create the data frame of the appropriate size.
-  cNames<-sapply(1:gramSize, function(x) paste0("t", x))
-  cNames<-c(cNames, "p")
-  
-  splitRow<-function(row)
-  {
-    res<-unlist(strsplit(row[[1]], split=" "))
-    res<-c(res, row[[2]])
-    res
-  }
-  mat<-apply(ngram_2, MARGIN=1, splitRow)
-
-  # note that we are transposing our matrix.
-  res<-data.frame(t(mat)) 
-  names(res)<-cNames
-  
-  
-  res<-arrange(res, t1, t2, desc(p))
-  
-  # Limit results for testing.
-#  res<-res[1:5,]
-  res
-}
 
 x<-makeNgDf(ngram_2, 2)
 sel<-(x$t1=="of" & x$t2 == "the")
 x[sel,]
 
 
-# View(x)
-
-sel<-x$t1=="of" && x$t2=="the"
-y<-x[sel,]
+y<-makeNgDf(ngram_3, 3)
 
 
+#Let's experiment with some matching...
+# we are going to tokenize a string, and see if we can apply it to our predictor....
 
-n<-ngram_2
-s<-n[1,1]
-sp<-unlist(strsplit(s, split=" "))
-class(sp)
-sp
-
-splitRow<-function(row)
+splitInput<-function(s)
 {
-  res<-unlist(strsplit(row[[1]], split=" "))
-  res<-c(res, row[[2]])
-  res
+  
 }
-x<-apply(ngram_2, MARGIN=1, splitRow)
+
+# We will want to scrub symbols, etc. later for better UX.
+#input<-"this is"
+input<-"into my"
+ti<-unlist(strsplit(input, split=" "))
+
+# The tokens we will use for matching....  The last few up to our computed limit.
+LIMIT<-2    # Test Val.
+l<-length(ti); f<-l - LIMIT
+ts <- ti[l-f:l]
+
+# Now we will match against the correct ngram set to decide on the best match....
+set<-y  # tri-gram table... limit + 1
+
+# How do we do this programatically..........
+filter = set$t1 == ti[1] & set$t2 == ti[2]
+m<-set[filter, LIMIT + 1]
+m
+
+# Like so.....  YEA!  I can probably programatically build this filter.
+# it seems that the only other option would be progressive selection, and R probably isn't up to it.
+
+sf<-filter_(set, .dots="t1=='into'")
 
 
-nr1<-ngram_2[1,1:2]
-splitRow(r1)
-
-
-splitRow(r1)
-
-r1<-ngram_2[1,]
-x<-unlist(strsplit(r1[[1]], split=" "))
-x<-c(x, r1[[2]])
-x
-
-
-x<- makeNgDf(ngram_2)
-x
-
-
+# Note.  If this doesn't match, we will have to backtrack....
 
 # We certainly don't want stats on everything that appears in our tables.  We should take a certain percentage of each,
 # depending on our needs.  The more we have, the more lookup space to traverse, but less chance of missing a word.

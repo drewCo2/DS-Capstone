@@ -1,4 +1,6 @@
 
+library(dplyr)
+
 # We will define + apply a function that will be used to extract all of the lines form our files.
 # We will use these lines for subsequent processing.
 readAllLines<-function(path)
@@ -29,6 +31,33 @@ ngramDF<-function(tokens, n)
   df<-arrange(df, desc(Count), Term)
   df<-mutate(df, Term=as.character(Term))
   df
+}
+
+# Given a set of ngrams, with terms and counts, this will decompose it into a data frame with probabilites
+# for the next word given n-1 tokens.
+makeNgDf<-function(ngrams, gramSize)
+{
+  # create the data frame of the appropriate size.
+  cNames<-sapply(1:gramSize, function(x) paste0("t", x))
+  cNames<-c(cNames, "p")
+  
+  splitRow<-function(row)
+  {
+    res<-unlist(strsplit(row[[1]], split=" "))
+    res<-c(res, row[[2]])
+    res
+  }
+  mat<-apply(ngrams, MARGIN=1, splitRow)
+  
+  # note that we are transposing our matrix.
+  res<-data.frame(t(mat)) 
+  names(res)<-cNames
+  
+  # we want to arrange these to t(1...n-1) -> count -> t(n)
+  # ths orders the table so that we have the most likely token given the preceding n-1 tokens.
+  order<-c(cNames[1:gramSize-1], "desc(p)", cNames[gramSize+1])
+  res<-arrange_(res, .dots=order) 
+  res
 }
 
 # Create a logical vector based on a given mass.  The (numeric) vector in question will be progressively summed
