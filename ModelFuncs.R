@@ -41,6 +41,7 @@ makeNgDf<-function(ngrams, gramSize)
   cNames<-sapply(1:gramSize, function(x) paste0("t", x))
   cNames<-c(cNames, "p")
   
+  
   splitRow<-function(row)
   {
     res<-unlist(strsplit(row[[1]], split=" "))

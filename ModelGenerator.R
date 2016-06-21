@@ -8,6 +8,7 @@ rm(list=ls())
 
 source("begin.R")
 source("ModelFuncs.R")
+source("PredictionFuncs.R")
 
 library(quanteda)
 library(dplyr)
@@ -43,6 +44,10 @@ ngram_3 <- ngramDF(allTokens, 3)
 ngram_4 <- ngramDF(allTokens, 4)
 
 
+parts<-list(ngram_1, ngram_2, ngram_3, ngram_4)
+model<-sapply(1:length(parts), function(x) makeNgDf(parts[[x]], x))
+
+
 
 x<-makeNgDf(ngram_2, 2)
 sel<-(x$t1=="of" & x$t2 == "the")
@@ -52,37 +57,11 @@ x[sel,]
 y<-makeNgDf(ngram_3, 3)
 
 
-#Let's experiment with some matching...
-# we are going to tokenize a string, and see if we can apply it to our predictor....
 
-splitInput<-function(s)
-{
-  
-}
+ti<-getTokens("This is a bit of data")
 
-# We will want to scrub symbols, etc. later for better UX.
-#input<-"this is"
-input<-"into my"
-ti<-unlist(strsplit(input, split=" "))
-
-# The tokens we will use for matching....  The last few up to our computed limit.
-LIMIT<-2    # Test Val.
-l<-length(ti); f<-l - LIMIT
-ts <- ti[l-f:l]
-
-# Now we will match against the correct ngram set to decide on the best match....
-set<-y  # tri-gram table... limit + 1
-
-# How do we do this programatically..........
-filter = set$t1 == ti[1] & set$t2 == ti[2]
-m<-set[filter, LIMIT + 1]
-m
-
-# Like so.....  YEA!  I can probably programatically build this filter.
-# it seems that the only other option would be progressive selection, and R probably isn't up to it.
-
-sf<-filter_(set, .dots="t1=='into'")
-
+fil<-makeFilter(ti) 
+fil
 
 # Note.  If this doesn't match, we will have to backtrack....
 
