@@ -45,29 +45,79 @@ getLastTokens<-function(tokens, n)
 # y<-getLastNTokens(x, 3)
 # y
 
-# TEMP:
-parts<-list(ngram_1, ngram_2, ngram_3, ngram_4)
-model<-sapply(1:length(parts), function(x) makeNgDf(parts[[x]], x))
-
-input<-"into the void"
-srcTokens<-getTokens(input)
-
-# this will be the function.....
-# determine the max number of tokens that we can predict on...
-maxPredict<- length(model) - 1
 
 # this will get the groups of the best matches along the different token lengths.
 getMatchGroups<-function(tokens, n, df)
 {
-  # we actually need a better windowing function here.  Getting the last few doesn't really make sense.
-  t<-getLastTokens(tokens, n)
-  filter<-makeFilter(t)
-  match<-filter_(df, .dots=filter)
-  match
+  if(n == 0)
+  {
+    match<-head(df,1)
+  }
+  else
+  {
+    # we actually need a better windowing function here.  Getting the last few doesn't really make sense.
+    t<-getLastTokens(tokens, n)
+    filter<-makeFilter(t)
+    match<-filter_(df, .dots=filter)
+  }
+  
+  if(nrow(match) > 0)
+  {
+    # Take the top listed item. assuming this is our best guess.
+    # later we could determine tie breakers by looking at our distributions of unigrams.
+    best <- head(match, 1)
+    nc<-ncol(best)
+    res<-data.frame(token=best[1,nc-1], p=best[1,nc], stringsAsFactors = FALSE)
+    res
+  }
+  else
+  {
+    res<-data.frame(token="", p=0, stringsAsFactors = FALSE)
+    res
+  }
+  
 }
 
-useLens<-2:maxPredict
+guessWord<-function(model, input)
+{
+  srcTokens<-getTokens(input)
+  
+  # this will be the function.....
+  # determine the max number of tokens that we can predict on...
+  maxPredict<- min(length(srcTokens), length(model) - 1)
+  
+  
+  useLens<-maxPredict:0
+  allMatches<-lapply(useLens, function(x) getMatchGroups(srcTokens, x, model[[x+1]]))
+  
+  # Now that we have all of the matches, we can just cyle through till we get our max...  res<-""
+  for (i in 1:length(allMatches)) {
+    # We just return the very first match.  This approach favors the larger n-grams that
+    # have a hit.  We don't take the p value into account at all.
+    m<-allMatches[[i]][1,1]
+    if(m != "")
+    {
+      res<-m
+    }
+  }
+  
+  res
+}
 
+# TEMP:
+parts<-list(ngram_1, ngram_2, ngram_3, ngram_4)
+model<-sapply(1:length(parts), function(x) makeNgDf(parts[[x]], x))
+input<-"into the void"
+
+
+st<-proc.time()
+
+guessWord(model, input)
+
+et<-proc.time()
+et-st
+
+#z<- getMatchGroups(srcTokens, 0, model[[1]])
 
 # usedf<-model[[curSize]]
 # srcTokens<-getTokens(input)

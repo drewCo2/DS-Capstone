@@ -51,8 +51,9 @@ makeNgDf<-function(ngrams, gramSize)
   mat<-apply(ngrams, MARGIN=1, splitRow)
   
   # note that we are transposing our matrix.
-  res<-data.frame(t(mat)) 
+  res<-data.frame(t(mat), stringsAsFactors = FALSE)
   names(res)<-cNames
+  res[,ncol(res)] = as.numeric(res[,ncol(res)])
   
   # we want to arrange these to t(1...n-1) -> count -> t(n)
   # ths orders the table so that we have the most likely token given the preceding n-1 tokens.
@@ -105,3 +106,4 @@ selectMinCount<-function(df, min, maxN)
   }
   res
 }
+
