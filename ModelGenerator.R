@@ -4,6 +4,8 @@
 
 # A lot of this content was taken from the exploration and assignment files.
 
+# NOTE: This file was mostly used for exploratory purposes, and is now obsolete.....
+
 rm(list=ls())
 
 source("begin.R")
@@ -13,8 +15,6 @@ source("PredictionFuncs.R")
 library(quanteda)
 library(dplyr)
 
-# defs
-COLS<-2
 
 
 # The files that we will need...
@@ -24,6 +24,9 @@ files<-list.files(dir, full.names = TRUE)
 
 # We can read all of the lines in for processing.
 lineGroups <- sapply(files, readAllLines)
+
+# defs
+COLS<-2
 
 
 # Now we can do the sampling...
@@ -97,4 +100,18 @@ boxplot(ngram_1$Count, ngram_2$Count, ngram_3$Count)
 boxplot(top_1$Count, top_2$Count, top_3$Count)
 #ngram_2 <- ngrams(allTokens, 2)
 #ngram_3 <- ngrams(allTokens, 3)
+
+
+
+
+dir<-'./DataFiles/en_US'
+files<-list.files(dir, full.names = TRUE)
+
+textModel<-CreateModel(files, 500, 4, cache.files = TRUE)
+
+st<-proc.time()
+guessWord(textModel, "the reason there is a")
+
+guessTime<-proc.time()-st
+guessTime
 

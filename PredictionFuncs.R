@@ -1,4 +1,7 @@
 
+library(quanteda)
+library(dplyr)
+
 # Create a string that we can use with dplyr's 'filter_' function.
 # We use this to select our ngrams from the result sets.
 makeFilter<-function(tokens)
@@ -39,11 +42,6 @@ getLastTokens<-function(tokens, n)
     res
   }
 }
-
-
-# x<-getTokens("this is a cow that I milked.")
-# y<-getLastNTokens(x, 3)
-# y
 
 
 # this will get the groups of the best matches along the different token lengths.
@@ -98,49 +96,10 @@ guessWord<-function(model, input)
     if(m != "")
     {
       res<-m
+      break
     }
   }
   
   res
-}
-
-# TEMP:
-parts<-list(ngram_1, ngram_2, ngram_3, ngram_4)
-model<-sapply(1:length(parts), function(x) makeNgDf(parts[[x]], x))
-input<-"into the void"
-
-
-st<-proc.time()
-
-guessWord(model, input)
-
-et<-proc.time()
-et-st
-
-#z<- getMatchGroups(srcTokens, 0, model[[1]])
-
-# usedf<-model[[curSize]]
-# srcTokens<-getTokens(input)
-# t<-getLastTokens(srcTokens, curSize)
-# # t
-# 
-# filter<-makeFilter(t)
-# match<-filter_(usedf, .dots=filter)
-
-# matchOK<-true
-# if(length(match) > 0)
-# {
-#   # W  
-# }
-# else
-# {
-#   matchOK<-false
-# }
-
-
-
-
-guessWord<-function(model, input)
-{
 }
 

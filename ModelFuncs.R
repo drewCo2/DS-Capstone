@@ -1,4 +1,7 @@
 
+source("PredictionFuncs.R")
+
+library(quanteda)
 library(dplyr)
 
 # We will define + apply a function that will be used to extract all of the lines form our files.
@@ -62,43 +65,12 @@ makeNgDf<-function(ngrams, gramSize)
   res
 }
 
-# Create a logical vector based on a given mass.  The (numeric) vector in question will be progressively summed
-# and any current sum that is <= mass will return TRUE.  Works great in sorted lists.
-accIsLessThanMass<-function(vec, mass)
-{
-  acc<-0
-  
-  res<-sapply(vec, function(x) {
-    acc<<-acc+x
-    acc <= mass
-  })
-  res
-}
-
-# Just grab the top terms from the df, according to our count percents.
-selectTopPct<-function(df, pct)
-{
-  s<-sum(df$Count)
-  mass<-s*pct
-  
-  sel<-accIsLessThanMass(df$Count, mass)
-  res<-df[sel,]
-  res
-  
-}
-
-# Grab the top n-items from the df
-selectTopN<-function(df, n)
-{
-  res<-df[1:n, ]
-  res
-}
 
 # select the top-n items that have a count >= min.
 # limited by maxN
 selectMinCount<-function(df, min, maxN)
 {
-  sel<-df$Count >= min
+  sel<-df$p >= min
   res<-df[sel,]
   if (nrow(res) > maxN)
   {
@@ -106,4 +78,44 @@ selectMinCount<-function(df, min, maxN)
   }
   res
 }
+
+
+# Create a prediction model based on the given files + parameters.
+# files = vector of file paths that contain the data we will sample from.
+# sampleSize = The number of samples to take from each file.
+# maxnGrams = The max number of ngram lookups that will be built.
+CreateModel<-function(files, sampleSize, maxnGrams, cache.files=FALSE)
+{
+  # We can read all of the lines in for processing.
+  reload<-TRUE
+  if (cache.files)
+  {
+    reload<-!exists("lineGroups")
+    if (!reload) { message("Using cached files.") }
+  }
+  if (reload)
+  {
+    message("Reading source files...")
+    lineGroups <<- sapply(files, readAllLines)
+  }
+  # Now we can do the sampling...
+  # Seed / Sample lines per file.
+  message("Creating sample sets...")
+  sampleSet<- sapply(lineGroups, function(x) sample(x, sampleSize))
+  
+  message("Creating docs...")
+  docSets<-apply(sampleSet, MARGIN=2, createDoc)
+  
+  message("tokenizing docs...")
+  allTokens<-tokenize(paste(docSets, collapse=" "), removeNumbers=TRUE, removeHyphens = TRUE, removePunct=TRUE, removeTwitter=TRUE, simplify=TRUE)
+  
+  message("computing ngrams...")
+  parts <- lapply(1:maxnGrams, function(x) ngramDF(allTokens, x))
+  
+  message("finalizing model")
+  model<-sapply(1:length(parts), function(x) makeNgDf(parts[[x]], x))
+  model
+  
+}
+
 
