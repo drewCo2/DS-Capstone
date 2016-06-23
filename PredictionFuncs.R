@@ -113,8 +113,8 @@ guessWord<-function(model, input)
   res
 }
 
-
- g<-guessWord(textModel, "this is a case of")
- g
-
+# 
+#  g<-guessWord(textModel, "this is a case of")
+#  g
+# 
 
