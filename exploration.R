@@ -70,5 +70,5 @@ object.size(textModel)
 
 saveRDS(tm2, "./Shiny/tm2.rds")
 
-
+textModel<-readRDS("textModel-1.RDS")
 

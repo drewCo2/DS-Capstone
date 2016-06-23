@@ -10,36 +10,21 @@ shinyServer(
   { 
     
     output$nextWord<-renderText({
-      word<-input$text
-      if (word == "")
+      if (input$text == "")
       {
-       res <- "the"
+        word <- "the"
+        nextBest = c("a", "b", "c", "d", "e")  
       }
       else
       {
-      res<-guessWord(textModel, word)
+        res<-guessWord(textModel, input$text)
+        word<-res$bestWord
+        nextBest<-res$nextBest
       }
-      res
+        
+      output$nextBest<-renderText(paste0(nextBest, collapse=", "))
       
-    })
-    
-#     doIt<-reactive({
-#     })
-#     
-#     # Let's make a prediction....
-#     output$nextWord<-doIt({
-#       
-#     })
-          
-#    input<-input$text
-#    word<-input
-#        output$nextWord<-renderText(word)
-
-    # guessWord()
-    
-#    guessWord()
-#    word<-guessWord(input$text)
-    
-#    output$nextWord<-renderText(word)
-  }
-)
+      word
+      
+  })
+})
