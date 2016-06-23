@@ -2,7 +2,7 @@
 # 6/2016
 
 source("PredictionFuncs.R")
-textModel<-readRDS("tm2.RDS")
+textModel<-readRDS("textModel.RDS")
 
 
 shinyServer(
@@ -13,7 +13,7 @@ shinyServer(
       if (input$text == "")
       {
         word <- "the"
-        nextBest = c("a", "b", "c", "d", "e")  
+        nextBest = character()  
       }
       else
       {

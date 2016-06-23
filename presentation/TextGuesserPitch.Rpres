@@ -1,0 +1,47 @@
+Text Guesser
+========================================================
+author: Andrew A Ritz 
+date: 6/2016
+
+A great way to predict some text!
+
+Welcome
+========================================================
+
+*TextGuesser* is the dynamic new app, whos purpose is to help the user type strings
+of words by predicting the next word that they may use, based on the words that they have currently input.
+In order to do this, a simple prediction n-gram type model was created.
+
+**Data Source**  
+The source information that was used to build the model came from archive data from news sources, Twitter, and various Blogs.
+This information is available on the internet from: [https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip)
+
+About the Model
+========================================================
+
+The model is an n-gram based model.  In order for it to work, we use the following steps:
+
+- Split the input text into *tokens*, or single words.  
+- Based on the number of tokens, we can compare them to a lookup table of the same length.  
+- From withing this table, we have computed probabilites of what we think the next word might be.  
+- If no word can be detected, we *back off* by using one fewer token, until we find a suitable result.  
+
+
+Building The Model
+========================================================
+
+**Model Building**  
+To build the model, using the sources mentioned above, the following approach was used.
+
+- The texts were split into lines and combined into a single list.  From this list, we randomly sample some of the lines and tokenize them.
+- From these tokens, we can compute the n-grams.  Typically you would want to compute tables from unigrams to trigrams (1-gram to 3-gram) but the model generation code can support more.
+- Based on the tokens in the n-gram tables, we compute probability information, and sort the entire set by tokens then probabilites.  The sorting isn't necessary, but can improve performance during lookup cycles.
+
+
+Using the App
+========================================================
+The application is located at: [https://drewco2.shinyapps.io/TextGuesser/](https://drewco2.shinyapps.io/TextGuesser/)
+
+To use this simple application, simply type a few words into the input box and pause for a moment.  After input,
+the application will make its guess and display the result.  In addition to it's best guess, the application will
+also display a list of the next best words based on the input.

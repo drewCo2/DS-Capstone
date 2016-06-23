@@ -15,10 +15,14 @@ files<-list.files(dir, full.names = TRUE)
 
 textModel<-CreateModel(files, 100, 4, cache.files = TRUE)
 textModel2<-CreateModel(files, 500, 4, cache.files = TRUE)
+textModel3<-CreateModel(files, 1000, 4, minN = 2, maxRows = 10000, cache.files = TRUE)
+
+saveRDS(textModel3, "textModel.RDS")
 
 
 res<-runTests(textModel, testCases)
 res<-runTests(textModel2, testCases)
+res<-runTests(textModel3, testCases)
 
 pct<- sum(res$pass) / nrow(res) 
 pct
